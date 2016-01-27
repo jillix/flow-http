@@ -20,5 +20,11 @@
   "bugs": {
     "url": "https://github.com/jillix/flow-http/issues"
   },
-  "homepage": "https://github.com/jillix/flow-http#readme"
+  "homepage": "https://github.com/jillix/flow-http#readme",
+  "dependencies": {
+    "flowhttp": "^0.3.0"
+  },
+  "browser": {
+    "http": "flowhttp"
+  }
 }
