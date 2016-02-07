@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "HTTP I/O for flow.",
   "main": "index.js",
+  "browser": "client.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -22,7 +23,10 @@
   },
   "homepage": "https://github.com/jillix/flow-http#readme",
   "dependencies": {
-    "flowhttp": "^0.3.0"
+    "client-sessions": "^0.7.0",
+    "express": "^4.13.4",
+    "flowhttp": "^0.3.0",
+    "spdy": "^3.2.0"
   },
   "browser": {
     "http": "flowhttp"

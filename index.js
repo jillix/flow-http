@@ -1,49 +1,47 @@
-var http = require('flowhttp');
-var Stream = require('stream');
+var Flow = require('flow');
+var http = require('spdy');
+var express = require('express');
+var sessions = require('client-sessions');
 
-exports.request = function (options) {
+exports.start = function (options, data, next) {
 
-    // TODO transform object to string/buffer (JSON.stringify)
+    // TODO call next, if server is runing
+    var instance = this;
 
-    /*
-    var opts = {
-        method: 'POST|GET|PUT|DELETE',
-        path: '/' + instance._name + ':' + eventName.substr(1)
-       headers: {},
-        host: window.location.host,
-        port: window.location.port
-        responseType: 'response type to set on the underlying xhr object'
-    };
-    */
+    // get global configs
+    options.ssl = options.ssl || Flow.config.ssl;
+    options.ses_conf = options.ses_conf|| Flow.config.session;
 
-    var url = options.url || ('/flow/' + options.to + ':' + options.emit);
-    var output = Stream.PassThrough();
-    var input = http[options.method || 'post'](url);
-    input.pipe(output);
+    var app = express();
+    Flow.server = http.createServer(options.ssl, app);
+    var clientSession = sessions(options.ses_conf);
 
-    // check status code and emit error
-    input.on('response', function (res) {
-        var code = res.statusCode;
-        if (code > 299) {
+    // use encrypted client sessions
+    app.use(clientSession);
 
-            // end output stream immediately
-            output.end();
+    // emit url to flow
+    app.use(function (req, res) {
 
-            // collect error data
-            var resData = '';
-            res.on('data', function (chunk) {
-                resData += chunk.toString();
-            });
+        var stream = instance.flow('http_req', {
+            req: req,
+            res: res,
+            session: req.session
+        });
+        stream.o.pipe(res);
+        stream.o.on('error', function (err) {
+            res.status(err.code || 500).send(err.stack);
+        });
+        req.pipe(stream.i);
 
-            // emit error on response end
-            res.on('end', function () {
-                var err = new Error(resData);
-                err.statusCode = code;
-                output.emit('error', err);
-            });
+        // since GET requests are ended immediately, write the url manually to the input
+        if (req.method === 'GET') {
+            stream.i.write(req.url);
         }
     });
 
-    return {i: input, o: output};
+    // start http server
+    Flow.server.listen(options._.port, function () {
+        console.log('flow-http is listening on port', options._.port);
+        next();
+    });
 };
-
