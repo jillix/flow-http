@@ -16,8 +16,11 @@ exports.request = function (chain, options, onError) {
     };
     */
 
-    var url = options.url || ('/flow/' + options.to + ':' + options.emit);
-    var input = http[options.method || 'post'](url);
+    if (typeof url !== string) {
+        return chain.o.emit('error', new Error('Flow-http.request: Invalid url.', url))
+    }
+
+    var input = http[options.method || 'post'](options.url);
     chain.i.pipe(input).pipe(output);
 
     // check status code and emit error
