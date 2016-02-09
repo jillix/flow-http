@@ -3,7 +3,9 @@
   "version": "0.0.1",
   "description": "HTTP I/O for flow.",
   "main": "index.js",
-  "browser": "client.js",
+  "browser": {
+    "http": "flowhttp"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -26,8 +28,5 @@
     "client-sessions": "^0.7.0",
     "flowhttp": "^0.3.0",
     "spdy": "^3.2.0"
-  },
-  "browser": {
-    "http": "flowhttp"
   }
 }

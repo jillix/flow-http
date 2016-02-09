@@ -20,7 +20,8 @@ exports.start = function (options, data, next) {
             });
             stream.o.pipe(res);
             stream.o.on('error', function (err) {
-                res.status(err.code || 500).send(err.stack);
+                res.statusCode = err.code || 500;
+                res.end(err.stack);
             });
             req.pipe(stream.i);
 
