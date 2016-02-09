@@ -1,42 +1,34 @@
 var Flow = require('flow');
 var http = require('spdy');
-var express = require('express');
 var sessions = require('client-sessions');
 
 exports.start = function (options, data, next) {
 
     // TODO call next, if server is runing
     var instance = this;
+    var clientSession = sessions(options.ses_conf|| Flow.config.session);
 
-    // get global configs
-    options.ssl = options.ssl || Flow.config.ssl;
-    options.ses_conf = options.ses_conf|| Flow.config.session;
+    Flow.server = http.createServer(options.ssl || Flow.config.ssl, function (req, res) {
 
-    var app = express();
-    Flow.server = http.createServer(options.ssl, app);
-    var clientSession = sessions(options.ses_conf);
+        // use encrypted client sessions
+        clientSession(req, res, function () {
 
-    // use encrypted client sessions
-    app.use(clientSession);
+            var stream = instance.flow('http_req', {
+                req: req,
+                res: res,
+                session: req.session
+            });
+            stream.o.pipe(res);
+            stream.o.on('error', function (err) {
+                res.status(err.code || 500).send(err.stack);
+            });
+            req.pipe(stream.i);
 
-    // emit url to flow
-    app.use(function (req, res) {
-
-        var stream = instance.flow('http_req', {
-            req: req,
-            res: res,
-            session: req.session
+            // since GET requests are ended immediately, write the url manually to the input
+            if (req.method === 'GET') {
+                stream.i.write(req.url);
+            }
         });
-        stream.o.pipe(res);
-        stream.o.on('error', function (err) {
-            res.status(err.code || 500).send(err.stack);
-        });
-        req.pipe(stream.i);
-
-        // since GET requests are ended immediately, write the url manually to the input
-        if (req.method === 'GET') {
-            stream.i.write(req.url);
-        }
     });
 
     // start http server
