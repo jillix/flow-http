@@ -4,6 +4,7 @@
   "description": "HTTP I/O for flow.",
   "main": "index.js",
   "browser": {
+    "./index.js": "client.js",
     "http": "flowhttp"
   },
   "scripts": {
