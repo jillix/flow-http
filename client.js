@@ -16,12 +16,12 @@ exports.request = function (chain, options, onError) {
     };
     */
 
-    if (typeof url !== string) {
+    if (typeof options.url !== 'string') {
         return chain.o.emit('error', new Error('Flow-http.request: Invalid url.', url))
     }
 
     var input = http[options.method || 'post'](options.url);
-    chain.i.pipe(input).pipe(output);
+    chain.i.pipe(input).pipe(chain.o);
 
     // check status code and emit error
     input.on('response', function (res) {
