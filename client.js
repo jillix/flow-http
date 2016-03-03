@@ -1,5 +1,4 @@
 var http = require('flowhttp');
-var Stream = require('stream');
 
 exports.request = function (chain, options, onError) {
 
