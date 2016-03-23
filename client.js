@@ -1,6 +1,6 @@
 var http = require('flowhttp');
 
-exports.request = function (chain, options, onError) {
+exports.request = function (options, output) {
 
     // TODO transform object to string/buffer (JSON.stringify)
 
@@ -16,11 +16,10 @@ exports.request = function (chain, options, onError) {
     */
 
     if (typeof options.url !== 'string') {
-        return chain.o.emit('error', new Error('Flow-http.request: Invalid url.', url))
+        return output.emit('error', new Error('Flow-http.request: Invalid url.', url))
     }
 
     var input = http[options.method || 'post'](options.url);
-    chain.i.pipe(input).pipe(chain.o);
 
     // check status code and emit error
     input.on('response', function (res) {
@@ -28,7 +27,7 @@ exports.request = function (chain, options, onError) {
         if (code > 299) {
 
             // end output stream immediately
-            chain.i.end();
+            output.end();
 
             // collect error data
             var resData = '';
@@ -40,9 +39,11 @@ exports.request = function (chain, options, onError) {
             res.on('end', function () {
                 var err = new Error(resData);
                 err.statusCode = code;
-                chain.o.emit('error', err);
+                output.emit('error', err);
             });
         }
     });
+
+    return input;
 };
 
