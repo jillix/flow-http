@@ -1,5 +1,3 @@
-//var http = require('flowhttp');
-
 exports.fetch = function (options, data, next) {
 
     if (typeof options.url !== 'string') {
@@ -21,13 +19,13 @@ exports.fetch = function (options, data, next) {
         } else {
             next(null, text);
         }
-    }).catch(function (err) {
-        next(err);
-    });
+    }).catch(next);
 };
 
-exports.request = function (options, output) {
-/*
+/* TODO pipe to flow net if whatwg streans are available
+var http = require('flowhttp');
+exports.stream = function (options, output) {
+
     // TODO transform object to string/buffer (JSON.stringify)
 
     var opts = {
@@ -65,5 +63,5 @@ exports.request = function (options, output) {
     });
 
     return input;
-*/
 };
+*/

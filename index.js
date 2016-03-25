@@ -53,9 +53,6 @@ function getSslInfo (ssl) {
 
 exports.start = function (options, data, next) {
 
-    // TODO ignore if server is running
-    // TODO send server session and other relevant data to the next
-
     options._ = Object.assign(defaultSession, options._);
     var sslError;
     if ((sslError = getSslInfo(options._.ssl)) instanceof Error) {
