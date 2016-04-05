@@ -86,8 +86,8 @@ exports.start = function (options, data, next) {
                 res.statusCode = err.code || 500;
                 res.end(err.stack);
             });
-            stream.pipe(res);
-            req.pipe(stream);
+
+            //req.pause();
 
             // since GET requests are ended immediately, write the url manually to the input
             if (req.method === 'GET') {

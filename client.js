@@ -1,7 +1,10 @@
 exports.fetch = function (options, data, next) {
 
+console.log('FLOW HTTP FETCH DATA:', data);
+
+    options.url = options.url || options._.url;
     if (typeof options.url !== 'string') {
-        return output.emit('error', new Error('Flow-http.request: Invalid url.', url))
+        return next(new Error('Flow-http.request: Invalid url.'));
     }
 
     var error;
@@ -15,7 +18,7 @@ exports.fetch = function (options, data, next) {
         return response.text();
     }).then(function (text) {
         if (error) {
-            next(text)
+            next(text);
         } else {
             next(null, text);
         }
