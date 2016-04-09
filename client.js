@@ -1,7 +1,5 @@
 exports.fetch = function (options, data, next) {
 
-console.log('FLOW HTTP FETCH DATA:', data);
-
     options.url = options.url || options._.url;
     if (typeof options.url !== 'string') {
         return next(new Error('Flow-http.request: Invalid url.'));
@@ -24,47 +22,3 @@ console.log('FLOW HTTP FETCH DATA:', data);
         }
     }).catch(next);
 };
-
-/* TODO pipe to flow net if whatwg streans are available
-var http = require('flowhttp');
-exports.stream = function (options, output) {
-
-    // TODO transform object to string/buffer (JSON.stringify)
-
-    var opts = {
-        method: 'POST|GET|PUT|DELETE',
-        path: '/' + instance._name + ':' + eventName.substr(1)
-       headers: {},
-        host: window.location.host,
-        port: window.location.port
-        responseType: 'response type to set on the underlying xhr object'
-    };
-
-    var input = http[options.method || 'post'](options.url);
-
-    // check status code and emit error
-    input.on('response', function (res) {
-        var code = res.statusCode;
-        if (code > 299) {
-
-            // end output stream immediately
-            output.end();
-
-            // collect error data
-            var resData = '';
-            res.on('data', function (chunk) {
-                resData += chunk.toString();
-            });
-
-            // emit error on response end
-            res.on('end', function () {
-                var err = new Error(resData);
-                err.statusCode = code;
-                output.emit('error', err);
-            });
-        }
-    });
-
-    return input;
-};
-*/
