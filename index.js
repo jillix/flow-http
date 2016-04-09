@@ -71,28 +71,26 @@ exports.start = function (options, data, next) {
 
     var instance = this;
     var clientSession = sessions(options._);
+    var stream = instance.flow('http_req');
+    stream.on('error', function (err) {
+        //res.statusCode = err.code || 500;
+        //res.end(err.stack);
+    });
+    stream.on('end', function () {
+        console.log('Flow-http.request.stream.end: End!');
+    });
 
     servers[port] = http.createServer(options._.ssl, function (req, res) {
 
         // use encrypted client sessions
         clientSession(req, res, function () {
 
-            var stream = instance.flow('http_req', {
+            // write request
+            stream.write({
                 req: req,
                 res: res,
                 session: req.session
             });
-            stream.on('error', function (err) {
-                res.statusCode = err.code || 500;
-                res.end(err.stack);
-            });
-
-            //req.pause();
-
-            // since GET requests are ended immediately, write the url manually to the input
-            if (req.method === 'GET') {
-                stream.end(req.url);
-            }
         });
     })
 
@@ -101,4 +99,16 @@ exports.start = function (options, data, next) {
         console.log('flow-http is listening on port', port);
         next(null, {server: servers[port], session: clientSession});
     });
+};
+
+// send data to response stream
+exports.send = function (options, data, next) {
+    console.log('Flow-http.send:', data);
+    data.res.send(data.chunk);
+};
+
+// end the response stream
+exports.end = function (options, data, next) {
+    console.log('Flow-http.end:', data.chunk.req);
+    data.res.end(data.chunk);
 };
