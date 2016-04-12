@@ -5,6 +5,11 @@ exports.fetch = function (options, data, next) {
         return next(new Error('Flow-http.request: Invalid url.'));
     }
 
+    if (typeof data === 'object') {
+        data = JSON.stringify(data);
+    }
+    console.log('http client data type:', data);
+
     var error;
     fetch(options.url, {
       method: options.method || 'post',
@@ -16,7 +21,7 @@ exports.fetch = function (options, data, next) {
         return response.text();
     }).then(function (text) {
         if (error) {
-            next(text);
+            next(new Error(text));
         } else {
             next(null, text);
         }
