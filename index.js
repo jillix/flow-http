@@ -2,6 +2,7 @@ var http = require('spdy');
 var path = require('path');
 var fs = require('fs');
 var sessions = require('client-sessions');
+var concat = require('concat-stream');
 var cwd = process.cwd();
 var servers = {};
 
@@ -71,22 +72,12 @@ exports.start = function (options, data, next) {
 
     var instance = this;
     var clientSession = sessions(options._);
-    var stream = instance.flow('http_req');
-    stream.on('error', function (err) {
-        //res.statusCode = err.code || 500;
-        //res.end(err.stack);
-    });
-    stream.on('end', function () {
-        console.log('Flow-http.request.stream.end: End!');
-    });
 
     servers[port] = http.createServer(options._.ssl, function (req, res) {
 
         // use encrypted client sessions
         clientSession(req, res, function () {
-
-            // write request
-            stream.write({
+            instance.flow('http_req').write({
                 req: req,
                 res: res,
                 session: req.session
@@ -102,13 +93,64 @@ exports.start = function (options, data, next) {
 };
 
 // send data to response stream
+exports.concat = function (options, data, next) {
+
+    if (!data.req) {
+        return next(new Error('Flow-http.data: No request stream found.'));
+    }
+
+    var request = data.req;
+    var method = data.req.method.toLowerCase();
+
+    if (method === 'post') {
+        data.req.pipe(concat(function (chunk) {
+            data.data = chunk;
+            next(null, data); 
+        }));
+        data.req.on('error', next);
+    } else {
+        next(null, data);
+    }
+};
+
+// send data to response stream
 exports.send = function (options, data, next) {
-    console.log('Flow-http.send:', data);
-    data.res.send(data.chunk);
+
+    var response = data.res || data._.res;
+    if (!response) {
+        return next(new Error('Flow-http.end: No response stream found.'));
+    }
+
+    // TODO check if data to send exists
+
+    response.send(data.send);
+    next(null, data);
 };
 
 // end the response stream
 exports.end = function (options, data, next) {
-    console.log('Flow-http.end:', data.chunk.req);
-    data.res.end(data.chunk);
+
+    var response = data.res || data._.res;
+    if (!response) {
+        return next(new Error('Flow-http.end: No response stream found.'));
+    }
+
+    // handle errors
+    if (data instanceof Error) {
+        response.writeHead(data.statusCode || 500, {
+            'content-type': 'text/plain'
+        });
+        response.end(data.message);
+
+    // end response stream
+    } else {
+
+        // TODO set headers
+        response.writeHead(data.statusCode || 200, {
+            'content-type': 'text/plain'
+        });
+        response.end(data);
+    }
+
+    next(null, data);
 };
