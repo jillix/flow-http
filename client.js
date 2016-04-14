@@ -5,6 +5,7 @@ exports.fetch = function (options, data, next) {
         return next(new Error('Flow-http.request: Invalid url.'));
     }
 
+    // TODO create a json parser data handler
     if (typeof data === 'object') {
         data = JSON.stringify(data);
     }
@@ -12,8 +13,9 @@ exports.fetch = function (options, data, next) {
 
     var error;
     fetch(options.url, {
-      method: options.method || 'post',
-      body: data
+        method: options.method || 'post',
+        credentials: 'same-origin',
+        body: data
     }).then(function (response) {
         if (!response.ok) {
             error = true;
