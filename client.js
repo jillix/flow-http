@@ -5,12 +5,6 @@ exports.fetch = function (options, data, next) {
         return next(new Error('Flow-http.request: Invalid url.'));
     }
 
-    // TODO create a json parser data handler
-    if (typeof data === 'object') {
-        data = JSON.stringify(data);
-    }
-    console.log('http client data type:', data);
-
     var error;
     fetch(options.url, {
         method: options.method || 'post',
@@ -20,7 +14,15 @@ exports.fetch = function (options, data, next) {
         if (!response.ok) {
             error = true;
         }
+
+        // TODO https://developer.mozilla.org/en-US/docs/Web/API/Body 
+        //      check if body implements a streaming interfaces
+
+        // TODO what to return? check also body methods
+
+        // TODO call next with response?
         return response.text();
+
     }).then(function (text) {
         if (error) {
             next(new Error(text));
