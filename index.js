@@ -17,7 +17,7 @@ var defaultSession = {
     cookie: {
         ephemeral: false, // when true, cookie expires when the browser closes
         httpOnly: true, // when true, cookie is not accessible from javascript
-        secure: false // when true, cookie will only be sent over SSL. use key 'secureProxy' instead if you handle SSL not in your node process
+        secure: true // when true, cookie will only be sent over SSL. use key 'secureProxy' instead if you handle SSL not in your node process
     },
 
     // flow app related configs
@@ -101,10 +101,11 @@ exports.concat = function (options, data, next) {
 
     var request = data.req;
     var method = data.req.method.toLowerCase();
+    var to = options._.to || 'http_req_body';
 
     if (method === 'post') {
         data.req.pipe(concat(function (chunk) {
-            data.data = chunk;
+            data[to] = chunk;
             next(null, data); 
         }));
         data.req.on('error', next);
@@ -118,39 +119,41 @@ exports.send = function (options, data, next) {
 
     var response = data.res || data._.res;
     if (!response) {
-        return next(new Error('Flow-http.end: No response stream found.'));
+        return next(new Error('Flow-http.send: No response stream found.'));
     }
+
+    console.log('Flow-http.send:', Object.keys(data._));
 
     // TODO check if data to send exists
-
-    response.send(data.send);
-    next(null, data);
-};
-
-// end the response stream
-exports.end = function (options, data, next) {
-
-    var response = data.res || data._.res;
-    if (!response) {
-        return next(new Error('Flow-http.end: No response stream found.'));
+    var send = {}
+    if (options._.send) {
+        options._.send.forEach(function (key) {
+            if (data[key] !== undefined) {
+                send[key] = data[key];
+            }
+        });
+    } else {
+        send = data;
     }
 
+    // TODO set headers
+
     // handle errors
-    if (data instanceof Error) {
-        response.writeHead(data.statusCode || 500, {
+    if (send instanceof Error) {
+        response.writeHead(send.statusCode || 500, {
             'content-type': 'text/plain'
         });
-        response.end(data.message);
+
+        send = send.message;
 
     // end response stream
     } else {
 
-        // TODO set headers
-        response.writeHead(data.statusCode || 200, {
+        response.writeHead(send.statusCode || 200, {
             'content-type': 'text/plain'
         });
-        response.end(data);
     }
 
+    response[options._.end ? 'end' : 'send'](send);
     next(null, data);
 };
