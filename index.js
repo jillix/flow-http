@@ -122,21 +122,19 @@ exports.send = function (options, data, next) {
         return next(new Error('Flow-http.send: No response stream found.'));
     }
 
-    console.log('Flow-http.send:', Object.keys(data._));
-
-    // TODO check if data to send exists
-    var send = {}
-    if (options._.send) {
-        options._.send.forEach(function (key) {
-            if (data[key] !== undefined) {
-                send[key] = data[key];
-            }
-        });
+    var send = data; 
+    if (options._.send && data[options._.send] !== undefined) {
+        send = data[options._.send];
     } else {
-        send = data;
+        // TODO throw error if key is not found.
     }
 
     // TODO set headers
+    var headers = options._.headers || {
+        'content-type': 'text/plain'
+    };
+
+    headers['content-length'] = send.length;
 
     // handle errors
     if (send instanceof Error) {
@@ -148,10 +146,7 @@ exports.send = function (options, data, next) {
 
     // end response stream
     } else {
-
-        response.writeHead(send.statusCode || 200, {
-            'content-type': 'text/plain'
-        });
+        response.writeHead(send.statusCode || 200, headers);
     }
 
     response[options._.end ? 'end' : 'send'](send);
