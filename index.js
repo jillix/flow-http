@@ -103,21 +103,17 @@ exports.concat = function (options, data, next) {
     var method = data.req.method.toLowerCase();
     var to = options._.to || 'http_req_body';
 
-    if (method === 'post') {
-        data.req.pipe(concat(function (chunk) {
-            data[to] = chunk;
-            next(null, data); 
-        }));
-        data.req.on('error', next);
-    } else {
-        next(null, data);
-    }
+    data.req.pipe(concat(function (chunk) {
+        data[to] = chunk;
+        next(null, data); 
+    }));
+    data.req.on('error', next);
 };
 
 // send data to response stream
 exports.send = function (options, data, next) {
 
-    var response = data.res || data._.res;
+    var response = data.res || options._.res;
     if (!response) {
         return next(new Error('Flow-http.send: No response stream found.'));
     }
