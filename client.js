@@ -1,6 +1,6 @@
 exports.fetch = function (options, data, next) {
 
-    options.url = options.url || options._.url;
+    options.url = options._.url || options.url;
     if (typeof options.url !== 'string') {
         return next(new Error('Flow-http.request: Invalid url.'));
     }
