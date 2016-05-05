@@ -113,7 +113,7 @@ exports.concat = function (options, data, next) {
 // send data to response stream
 exports.send = function (options, data, next) {
 
-    var response = data.res || options._.res;
+    var response = data.res || data._.res || options._.res;
     if (!response) {
         return next(new Error('Flow-http.send: No response stream found.'));
     }
@@ -139,10 +139,9 @@ exports.send = function (options, data, next) {
         });
 
         send = send.message;
-
     // end response stream
     } else {
-        response.writeHead(send.statusCode || 200, headers);
+        response.writeHead(options._.statusCode || 200, headers);
     }
 
     response[options._.end ? 'end' : 'send'](send);
