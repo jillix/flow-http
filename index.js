@@ -30,21 +30,23 @@ var defaultSession = {
 // read ssl files
 function getSslInfo (ssl) {
 
-    if (!ssl || !ssl.cert || !ssl.key) {
-        return new Error('Flow-http.ssl: No ssl config.');
+    ssl = ssl || {};
+
+    // the environment variable configurations have priority
+    var cert = process.env.FLOW_HTTP_CERT || ssl.cert;
+    var key = process.env.FLOW_HTTP_key || ssl.key;
+
+    if (!cert || !key) {
+        return new Error('Flow-http: No or incomplete SSL config.');
     }
 
-    ssl.cert = path.normalize(ssl.cert);
-    ssl.key = path.normalize(ssl.key);
+    ssl.cert = path.normalize(cert);
+    ssl.key = path.normalize(key);
 
     // file read will throw an error
     try {
-        ssl.cert = fs.readFileSync(path.resolve(cwd + ssl.cert));
-    } catch (err) {
-        return err;
-    }
-    try {
-        ssl.key = fs.readFileSync(path.resolve(cwd + ssl.key));
+        ssl.cert = fs.readFileSync(path.resolve((ssl.cert[0] === '/' ? cwd : '') + ssl.cert));
+        ssl.key = fs.readFileSync(path.resolve((ssl.key[0] === '/' ? cwd : '') + ssl.key));
     } catch (err) {
         return err;
     }
