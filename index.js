@@ -45,8 +45,8 @@ function getSslInfo (ssl) {
 
     // file read will throw an error
     try {
-        ssl.cert = fs.readFileSync(path.resolve((ssl.cert[0] === '/' ? cwd : '') + ssl.cert));
-        ssl.key = fs.readFileSync(path.resolve((ssl.key[0] === '/' ? cwd : '') + ssl.key));
+        ssl.cert = fs.readFileSync(path.resolve((ssl.cert[0] !== '/' ? cwd + '/' : '') + ssl.cert));
+        ssl.key = fs.readFileSync(path.resolve((ssl.key[0] !== '/' ? cwd + '/' : '') + ssl.key));
     } catch (err) {
         return err;
     }
