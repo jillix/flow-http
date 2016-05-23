@@ -60,9 +60,11 @@ exports.start = function (options, data, next) {
         return next(sslError);
     }
 
-    var port = options._.port;
-    if (typeof port === 'boolean' || isNaN(port) || port < 1 || port > 65535) {
-        return next(new Error('Flow-http: Port is not a number'));
+    // the environment variable configurations have priority
+    var portConfigured = process.env.FLOW_HTTP_PORT || options._.port;
+    var port = Number.parseInt(portConfigured);
+    if (isNaN(port) || port < 1 || port > 65535) {
+        return next(new Error('Flow-http: The port option is not a valid port number: ' + portConfigured));
     }
 
     // call next, if server is runing
