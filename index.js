@@ -34,7 +34,7 @@ function getSslInfo (ssl) {
 
     // the environment variable configurations have priority
     var cert = process.env.FLOW_HTTP_CERT || ssl.cert;
-    var key = process.env.FLOW_HTTP_key || ssl.key;
+    var key = process.env.FLOW_HTTP_KEY || ssl.key;
 
     if (!cert || !key) {
         return new Error('Flow-http: No or incomplete SSL config.');
