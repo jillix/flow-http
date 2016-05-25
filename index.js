@@ -118,36 +118,35 @@ exports.concat = function (options, data, next) {
 exports.send = function (options, data, next) {
 
     var response = data.res || data._.res || options._.res;
+
     if (!response) {
         return next(new Error('Flow-http.send: No response stream found.'));
     }
 
-    var send = data; 
-    if (options._.send && data[options._.send] !== undefined) {
-        send = data[options._.send];
+    // build response body
+    var body = '';
+    if (options._.send && typeof body[options._.send] !== undefined) {
+        body = data[options._.send];
+    } else if (!options._.send) {
+        body = data;
     } else {
-        // TODO throw error if key is not found.
+        return next(new Error('Flow-http.send: Send key not found on data chunk.'));
     }
+
+    if (typeof body !== 'string') {
+        return next(new Error('Flow-http.send: Invlid body type.'));
+    }
+
+    // build status code
+    var statusCode = data.statusCode || options._.statusCode || (data instanceof Error ? 500 : 200);
 
     // TODO set headers
     var headers = options._.headers || {
         'content-type': 'text/plain'
     };
+    headers['content-length'] = body.length;
 
-    headers['content-length'] = send.length;
-
-    // handle errors
-    if (send instanceof Error) {
-        response.writeHead(send.statusCode || 500, {
-            'content-type': 'text/plain'
-        });
-
-        send = send.message;
-    // end response stream
-    } else {
-        response.writeHead(options._.statusCode || 200, headers);
-    }
-
-    response[options._.end ? 'end' : 'send'](send);
+    response.writeHead(statusCode, headers);
+    response[options._.end ? 'end' : 'send'](body);
     next(null, data);
 };
