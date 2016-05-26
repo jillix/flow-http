@@ -125,10 +125,8 @@ exports.send = function (options, data, next) {
 
     // build response body
     var body = '';
-    if (options._.send && typeof body[options._.send] !== undefined) {
+    if (options._.send && typeof data[options._.send] !== 'undefined') {
         body = data[options._.send];
-    } else if (!options._.send) {
-        body = data;
     } else {
         return next(new Error('Flow-http.send: Send key not found on data chunk.'));
     }
