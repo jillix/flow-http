@@ -60,12 +60,11 @@ exports.start = function (options, data, next) {
         return next(null, data);
     }
 
-    var instance = this;
-
+	var event = this.flow('http_req');
     servers[port] = http.createServer(options._.ssl, function (req, res) {
-		instance.flow('http_req').write({
+		event.write({
 			req: req,
-			res: res,
+			res: res
 		});
     })
 
