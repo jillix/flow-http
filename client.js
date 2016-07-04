@@ -7,9 +7,10 @@ exports.fetch = function (options, data, next) {
 
     var error;
     fetch(options.url, {
-        method: options.method || 'post',
+        method: options.method || options._.method || 'post',
         credentials: 'same-origin',
-        body: data
+        body: data,
+		mode: options.mode || options._.mode || 'cors'
     }).then(function (response) {
         if (!response.ok) {
             error = true;
