@@ -104,14 +104,16 @@ exports.send = function (options, data, next) {
 
     // build response body
     var body = '';
-    if (options._.send && typeof data[options._.send] !== 'undefined') {
-        body = data[options._.send];
-    } else {
-        return next(new Error('Flow-http.send: Send key not found on data chunk.'));
-    }
+    if (options._.send) {
 
-    if (typeof body !== 'string') {
-        return next(new Error('Flow-http.send: Invlid body type.'));
+        if (typeof data[options._.send] === 'undefined') {
+            return next(new Error('Flow-http.send: Send key "' + options._.send + '" not found on data chunk.'));
+        }
+
+        body = data[options._.send];
+        if (typeof body !== 'string') {
+            return next(new Error('Flow-http.send: Invlid body type.'));
+        }
     }
 
     // build status code
