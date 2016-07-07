@@ -16,23 +16,20 @@ var defaultConfig = {
 // read ssl files
 function getSslInfo (ssl) {
 
-    ssl = ssl || {};
+    ssl = process.config.flow.ssl || ssl || {};
 
     // the environment variable configurations have priority
-    var cert = process.env.FLOW_HTTP_CERT || ssl.cert;
-    var key = process.env.FLOW_HTTP_KEY || ssl.key;
+    ssl.cert = path.resolve(process.env.FLOW_HTTP_CERT || ssl.cert);
+    ssl.key = path.resolve(process.env.FLOW_HTTP_KEY || ssl.key);
 
-    if (!cert || !key) {
+    if (!ssl.cert || !ssl.key) {
         return new Error('Flow-http: No or incomplete SSL config.');
     }
 
-    ssl.cert = path.normalize(cert);
-    ssl.key = path.normalize(key);
-
     // file read will throw an error
     try {
-        ssl.cert = fs.readFileSync(path.resolve((ssl.cert[0] !== '/' ? cwd + '/' : '') + ssl.cert));
-        ssl.key = fs.readFileSync(path.resolve((ssl.key[0] !== '/' ? cwd + '/' : '') + ssl.key));
+        ssl.cert = fs.readFileSync(ssl.cert);
+        ssl.key = fs.readFileSync(ssl.key);
     } catch (err) {
         return err;
     }
