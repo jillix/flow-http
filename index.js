@@ -46,7 +46,7 @@ exports.start = function (options, data, next) {
     }
 
     // the environment variable configurations have priority
-    var portConfigured = process.env.FLOW_HTTP_PORT || options._.port;
+    var portConfigured = process.env.FLOW_HTTP_PORT || process.config.flow.port || options._.port;
     var port = Number.parseInt(portConfigured);
     if (isNaN(port) || port < 1 || port > 65535) {
         return next(new Error('Flow-http: The port option is not a valid port number: ' + portConfigured));
