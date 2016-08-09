@@ -2,16 +2,37 @@
     "@context": [
         "http://localhost:8080/context/module.jsonld",
         {
+            "port": "http://uri4uri.net/vocab#port"
         }
     ],
     "@id": "https://github.com/jillix/flow-http#readme",
     "@type": "Module",
     "name": "flow-http",
     "version": "0.0.1",
-    "description": "Example module for flow",
+    "description": "HTTP I/O for flow.",
     "author": "jillix",
     "gitRepository": "git+https://github.com/jillix/flow-http.git",
     "exports": [
+        {
+            "@type": "DataHandler",
+            "name": "start",
+            "options": []
+        },
+        {
+            "@type": "DataHandler",
+            "name": "concat",
+            "options": []
+        },
+        {
+            "@type": "DataHandler",
+            "name": "send",
+            "options": []
+        },
+        {
+            "@type": "DataHandler",
+            "name": "fetch",
+            "options": []
+        }
     ],
     "options": [
     ]
