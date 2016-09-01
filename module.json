@@ -1,0 +1,47 @@
+{
+    "@context": [
+        "http://schema.jillix.net/context/module.jsonld",
+        {
+            "port": "http://example.com/port",
+            "ssl": "http://example.com/sll",
+            "cert": "http://example.com/cert",
+            "key": "http://example.com/key",
+            "send": "http://example.com/send",
+            "end": "http://example.com/end"
+        }
+    ],
+    "@id": "https://raw.githubusercontent.com/jillix/flow-http/master/module.json",
+    "@type": "Module",
+    "name": "flow-http",
+    "version": "0.0.1",
+    "description": "HTTP I/O for flow.",
+    "author": "jillix",
+    "gitRepository": "git+https://github.com/jillix/flow-http.git",
+    "exports": [
+        {
+            "@id": "https://raw.githubusercontent.com/jillix/flow-http/master/module.json#start",
+            "@type": "DataHandler",
+            "name": "start",
+            "args": []
+        },
+        {
+            "@id": "https://raw.githubusercontent.com/jillix/flow-http/master/module.json#concat",
+            "@type": "DataHandler",
+            "name": "concat",
+            "args": []
+        },
+        {
+            "@id": "https://raw.githubusercontent.com/jillix/flow-http/master/module.json#send",
+            "@type": "DataHandler",
+            "name": "send",
+            "args": []
+        },
+        {
+            "@id": "https://raw.githubusercontent.com/jillix/flow-http/master/module.json#fetch",
+            "@type": "DataHandler",
+            "name": "fetch",
+            "args": []
+        }
+    ],
+    "args": []
+}
