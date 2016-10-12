@@ -1,4 +1,5 @@
-var http = require('spdy');
+//var http = require('spdy');
+var http = require('http');
 var path = require('path');
 var fs = require('fs');
 var concat = require('concat-stream');
@@ -14,13 +15,13 @@ var defaultConfig = {
 };
 
 // read ssl files
-function getSslInfo (ssl) {
+function getSslInfo (args) {
 
-    ssl = process.config.flow.ssl || ssl || {};
+    let ssl = args.ssl = process.flow_env.ssl || args.ssl || {};
 
     // the environment variable configurations have priority
-    ssl.cert = path.resolve(process.env.FLOW_HTTP_CERT || ssl.cert);
-    ssl.key = path.resolve(process.env.FLOW_HTTP_KEY || ssl.key);
+    ssl.cert = path.resolve(ssl.cert);
+    ssl.key = path.resolve(ssl.key);
 
     if (!ssl.cert || !ssl.key) {
         return new Error('Flow-http: No or incomplete SSL config.');
@@ -33,20 +34,18 @@ function getSslInfo (ssl) {
     } catch (err) {
         return err;
     }
-
-    return ssl;
 }
 
 exports.start = function (options, data, next) {
 
-    options._ = Object.assign(defaultConfig, options._);
+    options = Object.assign(defaultConfig, options);
     var sslError;
-    if ((sslError = getSslInfo(options._.ssl)) instanceof Error) {
+    if ((sslError = getSslInfo(options)) instanceof Error) {
         return next(sslError);
     }
 
     // the environment variable configurations have priority
-    var portConfigured = process.env.FLOW_HTTP_PORT || process.config.flow.port || options._.port;
+    var portConfigured = process.flow_env.port || options.port;
     var port = Number.parseInt(portConfigured);
     if (isNaN(port) || port < 1 || port > 65535) {
         return next(new Error('Flow-http: The port option is not a valid port number: ' + portConfigured));
@@ -57,8 +56,8 @@ exports.start = function (options, data, next) {
         return next(null, data);
     }
 
-	var event = this.flow('http_req');
-    servers[port] = http.createServer(options._.ssl, function (req, res) {
+	var event = this.flow(this._name + '/http_req');
+    servers[port] = http.createServer(/*options.ssl, */function (req, res) {
 		event.write({
 			req: req,
 			res: res
