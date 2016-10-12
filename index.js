@@ -66,8 +66,7 @@ exports.start = function (options, data, next) {
 
     // start http server
     servers[port].listen(port, function () {
-        console.log('flow-http is listening on port', port);
-        next(null, {server: servers[port]});
+        next(null, 'Flow-http is listening on port:' + port + '\n');
     });
 };
 
