@@ -107,7 +107,7 @@ exports.send = function (options, data, next) {
 
         body = data[options.send];
         if (typeof body !== 'string') {
-            return next(new Error('Flow-http.send: Invlid body type.'));
+            return next(new Error('Flow-http.send: Invalid body type.'));
         }
     }
 
