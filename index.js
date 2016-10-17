@@ -36,16 +36,17 @@ function getSslInfo (args) {
     }
 }
 
-exports.start = function (options, data, next) {
+exports.start = function (args, data, next) {
 
-    options = Object.assign(defaultConfig, options);
-    var sslError;
-    if ((sslError = getSslInfo(options)) instanceof Error) {
+    const self = this;
+    args= Object.assign(defaultConfig, args);
+    let sslError;
+    if ((sslError = getSslInfo(args)) instanceof Error) {
         return next(sslError);
     }
 
     // the environment variable configurations have priority
-    var portConfigured = process.flow_env.port || options.port;
+    var portConfigured = process.flow_env.port || args.port;
     var port = Number.parseInt(portConfigured);
     if (isNaN(port) || port < 1 || port > 65535) {
         return next(new Error('Flow-http: The port option is not a valid port number: ' + portConfigured));
@@ -57,11 +58,25 @@ exports.start = function (options, data, next) {
     }
 
 	var event = this.flow(this._name + '/http_req');
-    servers[port] = http.createServer(/*options.ssl, */function (req, res) {
-		event.write({
-			req: req,
-			res: res
-		});
+    this.methods = {};
+    servers[port] = http.createServer(/*args.ssl, */function (req, res) {
+
+        // emit different event for configured methods
+        if (args.method && args.methods[data.req.method]) {
+            let method = data.req.method;
+            let cached = self.methods[method];
+            if (cached) {
+                event = cached;
+            } else {
+                event = cached = self.flow(args.methods[method]);
+                event.once('end', () => delete self.methods[method]);
+            }
+        }
+
+        event.write({
+            req: req,
+            res: res
+        });
     })
 
     // start http server
