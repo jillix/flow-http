@@ -39,7 +39,7 @@ function getSslInfo (args) {
 exports.start = function (args, data, next) {
 
     const self = this;
-    args= Object.assign(defaultConfig, args);
+    args = Object.assign(defaultConfig, args);
     let sslError;
     if ((sslError = getSslInfo(args)) instanceof Error) {
         return next(sslError);
@@ -57,21 +57,10 @@ exports.start = function (args, data, next) {
         return next(null, data);
     }
 
-	var event = this.flow(this._name + '/http_req');
-    this.methods = {};
     servers[port] = http.createServer(/*args.ssl, */function (req, res) {
 
-        // emit different event for configured methods
-        if (args.method && args.methods[data.req.method]) {
-            let method = data.req.method;
-            let cached = self.methods[method];
-            if (cached) {
-                event = cached;
-            } else {
-                event = cached = self.flow(args.methods[method]);
-                event.once('end', () => delete self.methods[method]);
-            }
-        }
+        let method = args.methods && args.methods[req.method] ? args.methods[req.method] : req.method.toUpperCase();
+        let event = self.flow(self._name + '/' + method);
 
         event.write({
             req: req,
@@ -106,7 +95,7 @@ exports.concat = function (options, data, next) {
 // send data to response stream
 exports.send = function (options, data, next) {
 
-    var response = data.res || data._.res || options.res;
+    var response = data.res || options.res;
 
     if (!response) {
         return next(new Error('Flow-http.send: No response stream found.'));
@@ -134,7 +123,6 @@ exports.send = function (options, data, next) {
         'content-type': 'text/plain'
     };
     headers['content-length'] = body.length;
-
     response.writeHead(statusCode, headers);
     response[options.end ? 'end' : 'send'](body);
     next(null, data);
