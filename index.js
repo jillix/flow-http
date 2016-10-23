@@ -60,7 +60,7 @@ exports.start = function (args, data, next) {
     servers[port] = http.createServer(/*args.ssl, */function (req, res) {
 
         let method = args.methods && args.methods[req.method] ? args.methods[req.method] : req.method.toUpperCase();
-        let event = self.flow(self._name + '/' + method);
+        let event = self.flow(self._name + '/' + method, {session: req.session});
 
         event.write({
             req: req,
