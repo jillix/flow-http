@@ -1,16 +1,15 @@
 exports.fetch = function (options, data, next) {
 
-    options.url = options._.url || options.url;
     if (typeof options.url !== 'string') {
         return next(new Error('Flow-http.request: Invalid url.'));
     }
 
     var error;
     fetch(options.url, {
-        method: options.method || options._.method || 'post',
+        method: options.method || 'post',
         credentials: 'same-origin',
         body: data,
-		mode: options.mode || options._.mode || 'cors'
+		mode: options.mode || 'cors'
     }).then(function (response) {
         if (!response.ok) {
             error = true;
