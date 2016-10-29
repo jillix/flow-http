@@ -122,6 +122,7 @@ exports.send = function (options, data, next) {
     var headers = options.headers || {
         'content-type': 'text/plain'
     };
+    headers = data.headers ? Object.assign(headers, data.headers) : headers;
     headers['content-length'] = body.length;
     response.writeHead(statusCode, headers);
     response[options.end ? 'end' : 'send'](body);
