@@ -27,7 +27,8 @@ exports.fetch = function (options, data, next) {
         if (error) {
             next(new Error(text));
         } else {
-            next(null, text);
+            options.key ? (data[options.key] = text) : (data = text);
+            next(null, data);
         }
     }).catch(next);
 };
