@@ -1,4 +1,4 @@
-exports.fetch = function (options, data, next) {
+exports.fetch = function (scope, inst, options, data, next) {
 
     if (typeof options.url !== 'string' && typeof data.url !== 'string') {
         return next(new Error('Flow-http.request: Invalid url.'));

@@ -15,9 +15,9 @@ var defaultConfig = {
 };
 
 // read ssl files
-function getSslInfo (args) {
+function getSslInfo (env, args) {
 
-    let ssl = args.ssl = process.flow_env.ssl || args.ssl || {};
+    let ssl = args.ssl = env.ssl || args.ssl || {};
 
     // the environment variable configurations have priority
     ssl.cert = path.resolve(ssl.cert);
@@ -36,17 +36,16 @@ function getSslInfo (args) {
     }
 }
 
-exports.start = function (args, data, next) {
+exports.start = function (scope, inst, args, data, next) {
 
-    const self = this;
     args = Object.assign(defaultConfig, args);
     let sslError;
-    if ((sslError = getSslInfo(args)) instanceof Error) {
+    if ((sslError = getSslInfo(scope.env, args)) instanceof Error) {
         return next(sslError);
     }
 
     // the environment variable configurations have priority
-    var portConfigured = process.flow_env.port || args.port;
+    var portConfigured = scope.env.port || args.port;
     var port = Number.parseInt(portConfigured);
     if (isNaN(port) || port < 1 || port > 65535) {
         return next(new Error('Flow-http: The port option is not a valid port number: ' + portConfigured));
@@ -60,7 +59,7 @@ exports.start = function (args, data, next) {
     servers[port] = http.createServer(/*args.ssl, */function (req, res) {
 
         let method = args.methods && args.methods[req.method] ? args.methods[req.method] : req.method.toUpperCase();
-        let event = self.flow(self._name + '/' + method, {session: req.session});
+        let event = scope.flow(inst._name + '/' + method, {session: req.session});
 
         event.write({
             req: req,
@@ -75,7 +74,7 @@ exports.start = function (args, data, next) {
 };
 
 // send data to response stream
-exports.concat = function (options, data, next) {
+exports.concat = function (scope, inst, args, data, next) {
 
     if (!data.req) {
         return next(new Error('Flow-http.data: No request stream found.'));
@@ -83,7 +82,7 @@ exports.concat = function (options, data, next) {
 
     var request = data.req;
     var method = data.req.method.toLowerCase();
-    var to = options.to || 'http_req_body';
+    var to = args.to || 'http_req_body';
 
     data.req.pipe(concat(function (chunk) {
         data[to] = chunk;
@@ -93,9 +92,9 @@ exports.concat = function (options, data, next) {
 };
 
 // send data to response stream
-exports.send = function (options, data, next) {
+exports.send = function (scope, inst, args, data, next) {
 
-    var response = data.res || options.res;
+    var response = data.res || args.res;
 
     if (!response) {
         return next(new Error('Flow-http.send: No response stream found.'));
@@ -103,28 +102,28 @@ exports.send = function (options, data, next) {
 
     // build response body
     var body = '';
-    if (options.send) {
+    if (args.send) {
 
-        if (typeof data[options.send] === 'undefined') {
-            return next(new Error('Flow-http.send: Send key "' + options.send + '" not found on data chunk.'));
+        if (typeof data[args.send] === 'undefined') {
+            return next(new Error('Flow-http.send: Send key "' + args.send + '" not found on data chunk.'));
         }
 
-        body = data[options.send];
+        body = data[args.send];
         if (typeof body !== 'string') {
             return next(new Error('Flow-http.send: Invalid body type.'));
         }
     }
 
     // build status code
-    var statusCode = data.statusCode || options.statusCode || (data instanceof Error ? 500 : 200);
+    var statusCode = data.statusCode || args.statusCode || (data instanceof Error ? 500 : 200);
 
     // TODO set headers
-    var headers = options.headers || {
+    var headers = args.headers || {
         'content-type': 'text/plain'
     };
     headers = data.headers ? Object.assign(headers, data.headers) : headers;
     headers['content-length'] = body.length;
     response.writeHead(statusCode, headers);
-    response[options.end ? 'end' : 'send'](body);
+    response[args.end ? 'end' : 'send'](body);
     next(null, data);
 };
