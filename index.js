@@ -1,4 +1,5 @@
-var http = require('spdy');
+//var http = require('spdy');
+var http = require('http');
 var path = require('path');
 var fs = require('fs');
 var concat = require('concat-stream');
@@ -58,7 +59,8 @@ exports.start = function (options, data, next) {
     }
 
 	var event = this.flow('http_req');
-    servers[port] = http.createServer(options._.ssl, function (req, res) {
+    //servers[port] = http.createServer(options._.ssl, function (req, res) {
+    servers[port] = http.createServer(function (req, res) {
 		event.write({
 			req: req,
 			res: res
