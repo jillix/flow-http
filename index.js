@@ -1,4 +1,5 @@
-var http = require('spdy');
+//var http = require('spdy');
+var http = require('http');
 var path = require('path');
 var fs = require('fs');
 var concat = require('concat-stream');
@@ -14,13 +15,13 @@ var defaultConfig = {
 };
 
 // read ssl files
-function getSslInfo (ssl) {
+function getSslInfo (env, args) {
 
-    ssl = process.config.flow.ssl || ssl || {};
+    let ssl = args.ssl = env.ssl || args.ssl || {};
 
     // the environment variable configurations have priority
-    ssl.cert = path.resolve(process.env.FLOW_HTTP_CERT || ssl.cert);
-    ssl.key = path.resolve(process.env.FLOW_HTTP_KEY || ssl.key);
+    ssl.cert = path.resolve(ssl.cert);
+    ssl.key = path.resolve(ssl.key);
 
     if (!ssl.cert || !ssl.key) {
         return new Error('Flow-http: No or incomplete SSL config.');
@@ -33,20 +34,18 @@ function getSslInfo (ssl) {
     } catch (err) {
         return err;
     }
-
-    return ssl;
 }
 
-exports.start = function (options, data, next) {
+exports.start = function (scope, inst, args, data, next) {
 
-    options._ = Object.assign(defaultConfig, options._);
-    var sslError;
-    if ((sslError = getSslInfo(options._.ssl)) instanceof Error) {
+    args = Object.assign(defaultConfig, args);
+    let sslError;
+    if ((sslError = getSslInfo(scope.env, args)) instanceof Error) {
         return next(sslError);
     }
 
     // the environment variable configurations have priority
-    var portConfigured = process.env.FLOW_HTTP_PORT || process.config.flow.port || options._.port;
+    var portConfigured = scope.env.port || args.port;
     var port = Number.parseInt(portConfigured);
     if (isNaN(port) || port < 1 || port > 65535) {
         return next(new Error('Flow-http: The port option is not a valid port number: ' + portConfigured));
@@ -57,23 +56,25 @@ exports.start = function (options, data, next) {
         return next(null, data);
     }
 
-	var event = this.flow('http_req');
-    servers[port] = http.createServer(options._.ssl, function (req, res) {
-		event.write({
-			req: req,
-			res: res
-		});
+    servers[port] = http.createServer(/*args.ssl, */function (req, res) {
+
+        let method = args.methods && args.methods[req.method] ? args.methods[req.method] : req.method.toUpperCase();
+        let event = scope.flow(inst._name + '/' + method, {session: req.session});
+
+        event.write({
+            req: req,
+            res: res
+        });
     })
 
     // start http server
     servers[port].listen(port, function () {
-        console.log('flow-http is listening on port', port);
-        next(null, {server: servers[port]});
+        next(null, 'Flow-http is listening on port:' + port + '\n');
     });
 };
 
 // send data to response stream
-exports.concat = function (options, data, next) {
+exports.concat = function (scope, inst, args, data, next) {
 
     if (!data.req) {
         return next(new Error('Flow-http.data: No request stream found.'));
@@ -81,7 +82,7 @@ exports.concat = function (options, data, next) {
 
     var request = data.req;
     var method = data.req.method.toLowerCase();
-    var to = options._.to || 'http_req_body';
+    var to = args.to || 'http_req_body';
 
     data.req.pipe(concat(function (chunk) {
         data[to] = chunk;
@@ -91,9 +92,9 @@ exports.concat = function (options, data, next) {
 };
 
 // send data to response stream
-exports.send = function (options, data, next) {
+exports.send = function (scope, inst, args, data, next) {
 
-    var response = data.res || data._.res || options._.res;
+    var response = data.res || args.res;
 
     if (!response) {
         return next(new Error('Flow-http.send: No response stream found.'));
@@ -101,28 +102,28 @@ exports.send = function (options, data, next) {
 
     // build response body
     var body = '';
-    if (options._.send) {
+    if (args.send) {
 
-        if (typeof data[options._.send] === 'undefined') {
-            return next(new Error('Flow-http.send: Send key "' + options._.send + '" not found on data chunk.'));
+        if (typeof data[args.send] === 'undefined') {
+            return next(new Error('Flow-http.send: Send key "' + args.send + '" not found on data chunk.'));
         }
 
-        body = data[options._.send];
+        body = data[args.send];
         if (typeof body !== 'string') {
-            return next(new Error('Flow-http.send: Invlid body type.'));
+            return next(new Error('Flow-http.send: Invalid body type.'));
         }
     }
 
     // build status code
-    var statusCode = data.statusCode || options._.statusCode || (data instanceof Error ? 500 : 200);
+    var statusCode = data.statusCode || args.statusCode || (data instanceof Error ? 500 : 200);
 
     // TODO set headers
-    var headers = options._.headers || {
+    var headers = args.headers || {
         'content-type': 'text/plain'
     };
+    headers = data.headers ? Object.assign(headers, data.headers) : headers;
     headers['content-length'] = body.length;
-
     response.writeHead(statusCode, headers);
-    response[options._.end ? 'end' : 'send'](body);
+    response[args.end ? 'end' : 'send'](body);
     next(null, data);
 };

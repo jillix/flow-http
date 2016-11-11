@@ -1,16 +1,15 @@
-exports.fetch = function (options, data, next) {
+exports.fetch = function (scope, inst, options, data, next) {
 
-    options.url = options._.url || options.url;
-    if (typeof options.url !== 'string') {
+    if (typeof options.url !== 'string' && typeof data.url !== 'string') {
         return next(new Error('Flow-http.request: Invalid url.'));
     }
 
     var error;
-    fetch(options.url, {
-        method: options.method || options._.method || 'post',
+    fetch(options.url || data.url, {
+        method: options.method || 'post',
         credentials: 'same-origin',
         body: data,
-		mode: options.mode || options._.mode || 'cors'
+		mode: options.mode || 'cors'
     }).then(function (response) {
         if (!response.ok) {
             error = true;
@@ -28,7 +27,8 @@ exports.fetch = function (options, data, next) {
         if (error) {
             next(new Error(text));
         } else {
-            next(null, text);
+            options.key ? (data[options.key] = text) : (data = text);
+            next(null, data);
         }
     }).catch(next);
 };
