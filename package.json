@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/jillix/flow-http#readme",
   "dependencies": {
-    "concat-stream": "^1.5.1",
-    "spdy": "^3.3.3"
+    "concat-stream": "^1.5.2",
+    "spdy": "^3.4.4"
   }
 }
