@@ -24,7 +24,7 @@ exports.listen = (scope, inst, args, data, next) => {
     }
 
     servers[port] = http.createServer(ssl, (req, res) => Request(scope, inst, args, req, res));
-    servers[port].listen(port, () => next(null, 'Flow-http is listening on port:' + port + '\n'));
+    servers[port].listen(port, () => next(null, 'Flow-http is listening on port: ' + port + '\n'));
     servers[port].on('close', () => servers[port] = null);
 };
 
