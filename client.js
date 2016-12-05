@@ -8,8 +8,8 @@ exports.fetch = function (scope, inst, options, data, next) {
     fetch(options.url || data.url, {
         method: options.method || 'post',
         credentials: 'same-origin',
-        body: data,
-		mode: options.mode || 'cors'
+        body: options.requestBody ? data[options.requestBody] : data,
+        mode: options.mode || 'cors'
     }).then(function (response) {
         if (!response.ok) {
             error = true;
