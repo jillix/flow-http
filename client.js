@@ -1,12 +1,15 @@
+"use strict"
+
 exports.fetch = function (scope, inst, options, data, next) {
 
     if (typeof options.url !== 'string' && typeof data.url !== 'string') {
         return next(new Error('Flow-http.request: Invalid url.'));
     }
 
-    var error;
+    let error;
+    const method = options.method ? options.method.toUpperCase() : 'GET';
     fetch(options.url || data.url, {
-        method: options.method || 'post',
+        method: method,
         credentials: 'same-origin',
         body: options.requestBody ? data[options.requestBody] : data,
         mode: options.mode || 'cors'
