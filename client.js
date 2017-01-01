@@ -1,36 +1,56 @@
 "use strict"
 
-exports.fetch = function (scope, inst, options, data, next) {
+/* Arguments: {
+    url: "url",
+    method: "http method",
+    mode: "cors",
+    body: "data[args.body]"
+    key: "data[key] = result"
+}*/
 
-    if (typeof options.url !== 'string' && typeof data.url !== 'string') {
+exports.fetch = (scope, state, args, data, next) => {
+
+    if (typeof args.url !== 'string' && typeof data.url !== 'string') {
         return next(new Error('Flow-http.request: Invalid url.'));
     }
 
-    let error;
-    const method = options.method ? options.method.toUpperCase() : 'GET';
-    fetch(options.url || data.url, {
-        method: method,
+    const options = {
+        method: typeof args.method === 'string' ? args.method.toUpperCase() : 'GET',
         credentials: 'same-origin',
-        body: options.requestBody ? data[options.requestBody] : data,
-        mode: options.mode || 'cors'
-    }).then(function (response) {
+        mode: args.mode || 'cors'
+    };
+
+    // Request body
+    if (typeof args.body === 'string' && data[args.body] !== undefined) {
+        options.body = data[args.body];
+    }
+
+    let error;
+    fetch(args.url || data.url, options).then((response) => {
+
         if (!response.ok) {
             error = true;
+        }
+
+        switch (response.headers.get('content-type')) {
+            case "application/json":
+                return response.json();
+            case "text/plain":
+            case "text/html":
+            case "text/css":
+                return response.text();
+            default:
+                return response.blob();
         }
 
         // TODO https://developer.mozilla.org/en-US/docs/Web/API/Body 
         //      check if body implements a streaming interfaces
 
-        // TODO what to return? check also body methods
-
-        // TODO call next with response?
-        return response.text();
-
-    }).then(function (text) {
+    }).then((res) => {
         if (error) {
-            next(new Error(text));
+            next(new Error(res));
         } else {
-            options.key ? (data[options.key] = text) : (data = text);
+            args.key ? (data[args.key] = res) : (data = res);
             next(null, data);
         }
     }).catch(next);
