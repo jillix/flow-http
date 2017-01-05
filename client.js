@@ -14,8 +14,9 @@ exports.fetch = (scope, state, args, data, next) => {
         return next(new Error('Flow-http.request: Invalid url.'));
     }
 
+    const method = (data.method || args.method || 'GET').toUpperCase();
     const options = {
-        method: typeof args.method === 'string' ? args.method.toUpperCase() : 'GET',
+        method: method,
         credentials: 'same-origin',
         mode: args.mode || 'cors'
     };
