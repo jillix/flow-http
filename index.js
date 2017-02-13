@@ -6,7 +6,7 @@ const Request = require('./lib/request');
 const Response = require('./lib/response');
 const servers = {};
 
-exports.listen = (scope, inst, args, data, next) => {
+exports.listen = (scope, inst, args, data, stream, next) => {
 
     const ssl = SSL.get(scope.env.ssl);
     if (!ssl) {
@@ -24,7 +24,10 @@ exports.listen = (scope, inst, args, data, next) => {
     }
 
     servers[port] = http.createServer(ssl, (req, res) => Request(scope, inst, args, req, res));
-    servers[port].listen(port, () => next(null, 'Flow-http is listening on port: ' + port + '\n'));
+    servers[port].listen(port, () => {
+        stream.write && stream.write('Flow-http is listening on port: ' + port + '\n');
+        next(null, data, stream);
+    });
     servers[port].on('close', () => servers[port] = null);
 };
 
