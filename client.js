@@ -1,4 +1,4 @@
-"use strict"
+'use strict';
 
 /* Arguments: {
     url: "url",
@@ -8,10 +8,10 @@
     key: "data[key] = result"
 }*/
 
-exports.fetch = (scope, state, args, data, next) => {
+exports.fetch = (args, data, callback) => {
 
     if (typeof args.url !== 'string' && typeof data.url !== 'string') {
-        return next(new Error('Flow-http.request: Invalid url.'));
+        return callback(new Error('Flow-http.request: Invalid url.'));
     }
 
     const method = (data.method || args.method || 'GET').toUpperCase();
@@ -49,10 +49,10 @@ exports.fetch = (scope, state, args, data, next) => {
 
     }).then((res) => {
         if (error) {
-            next(new Error(res));
+            callback(new Error(res));
         } else {
             args.key ? (data[args.key] = res) : (data = res);
-            next(null, data);
+            callback(null, data);
         }
-    }).catch(next);
+    }).catch(callback);
 };

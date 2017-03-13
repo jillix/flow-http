@@ -1,36 +1,46 @@
-"use strict"
+'use strict';
 
 const http = require('spdy');
 const SSL = require('./lib/ssl');
+const Events = require('events');
 const Request = require('./lib/request');
 const Response = require('./lib/response');
-const servers = {};
 
-exports.listen = (scope, inst, args, data, next) => {
+module.exports = () => {
+    let FlowHttp = new Events();
+    FlowHttp.servers = {};
 
-    const ssl = SSL.get(scope.env.ssl);
-    if (!ssl) {
-        return next(new Error('Flow-http.ssl: No ssl info found in environment.'));
-    }
+    // FlowHttp methods
+    FlowHttp.listen = (config, callback) => {
+        config = config || {};
 
-    const port = Number.parseInt(scope.env.port || data.port);
-    if (isNaN(port) || port < 1 || port > 65535) {
-        return next(new Error('Flow-http: The port option is not a valid port number or out of range.'));
-    }
+        // get ssl config
+        const ssl = SSL.get(config)
+        if (!ssl) {
+            return callback(new Error('No ssl info found in config.'));
+        }
 
-    // call next, if server is runing
-    if (servers[port]) {
-        return next(null, data);
-    }
+        // get port config
+        const port = Number.parseInt(config.port);
+        if (isNaN(port) || port < 1 || port > 65535) {
+            return callback(new Error('The port option is not a valid port number or out of range.'));
+        }
 
-    servers[port] = http.createServer(ssl, (req, res) => Request(scope, inst, args, req, res));
-    servers[port].listen(port, () => next(null, 'Flow-http is listening on port: ' + port + '\n'));
-    servers[port].on('close', () => servers[port] = null);
+        // exit if server is already running
+        if (FlowHttp.servers[port]) {
+            return callback(null);
+        }
+
+        FlowHttp.servers[port] = http.createServer(ssl, (req, res) => Request(FlowHttp, config, req, res));
+        FlowHttp.servers[port].listen(port, () => callback(null, 'Flow-http is listening on port: ' + port + '\n'));
+        FlowHttp.servers[port].on('close', () => FlowHttp.servers[port] = null);
+    };
+    FlowHttp.status = Response.status;
+    FlowHttp.headers = Response.headers;
+    FlowHttp.trailers = Response.trailers;
+    FlowHttp.pipe = Response.pipe;
+    FlowHttp.send = Response.send;
+    FlowHttp.end = Response.end;
+
+    return FlowHttp;
 };
-
-exports.status = Response.status;
-exports.headers = Response.headers;
-exports.trailers = Response.trailers;
-exports.pipe = Response.pipe;
-exports.send = Response.send;
-exports.end = Response.end;
