@@ -2,12 +2,11 @@
 
 const http = require('spdy');
 const SSL = require('./lib/ssl');
-const Events = require('events');
 const Request = require('./lib/request');
 const Response = require('./lib/response');
 
 module.exports = () => {
-    let FlowHttp = new Events();
+    let FlowHttp = {};
     FlowHttp.servers = {};
 
     // FlowHttp methods
@@ -15,7 +14,7 @@ module.exports = () => {
         config = config || {};
 
         // get ssl config
-        const ssl = SSL.get(config)
+        const ssl = SSL.get(config.ssl)
         if (!ssl) {
             return callback(new Error('No ssl info found in config.'));
         }
@@ -31,8 +30,8 @@ module.exports = () => {
             return callback(null);
         }
 
-        FlowHttp.servers[port] = http.createServer(ssl, (req, res) => Request(FlowHttp, config, req, res));
-        FlowHttp.servers[port].listen(port, () => callback(null, 'Flow-http is listening on port: ' + port + '\n'));
+        FlowHttp.servers[port] = http.createServer(ssl, (req, res) => Request(config, req, res, callback));
+        FlowHttp.servers[port].listen(port, () => console.log('Flow-http is listening on port: ' + port));
         FlowHttp.servers[port].on('close', () => FlowHttp.servers[port] = null);
     };
     FlowHttp.status = Response.status;
