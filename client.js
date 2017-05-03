@@ -44,12 +44,17 @@ exports.fetch = (args, data, callback) => {
                 return response.blob();
         }
 
-        // TODO https://developer.mozilla.org/en-US/docs/Web/API/Body 
+        // TODO https://developer.mozilla.org/en-US/docs/Web/API/Body
         //      check if body implements a streaming interfaces
 
     }).then((res) => {
         if (error) {
-            callback(new Error(res));
+
+            if (typeof res === 'string') {
+                callback(new Error(res));
+            } else {
+                callback(res);
+            }
         } else {
             args.key ? (data[args.key] = res) : (data = res);
             callback(null, data);
