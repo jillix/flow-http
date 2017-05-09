@@ -10,7 +10,7 @@ module.exports = () => {
     FlowHttp.servers = {};
 
     // FlowHttp methods
-    FlowHttp.listen = (config, callback) => {
+    FlowHttp.listen = (config, callback, onRequest) => {
         config = config || {};
 
         // get ssl config
@@ -30,9 +30,11 @@ module.exports = () => {
             return callback(null);
         }
 
-        FlowHttp.servers[port] = http.createServer(ssl, (req, res) => Request(config, req, res, callback));
+        FlowHttp.servers[port] = http.createServer(ssl, (req, res) => Request(config, req, res, onRequest));
         FlowHttp.servers[port].listen(port, () => console.log('Flow-http is listening on port: ' + port));
         FlowHttp.servers[port].on('close', () => FlowHttp.servers[port] = null);
+
+        callback(null);
     };
     FlowHttp.status = Response.status;
     FlowHttp.headers = Response.headers;
